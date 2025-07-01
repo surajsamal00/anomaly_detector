@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>System Metrics Dashboard</h1>
+
+  <!-- 🔽 Host Filter Dropdown -->
+  <form method="get">
+    <label for="host">Select Host:</label>
+    <select name="host" id="host" onchange="this.form.submit()">
+      <option value="">All Hosts</option>
+      {% for h in hosts %}
+        <option value="{{ h }}" {% if h == selected_host %}selected{% endif %}>{{ h }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  <!-- 📈 Chart Area -->
+  <canvas id="cpuChart" width="400" height="200"></canvas>
+
+  <script>
+    const metricData = {{ metrics_json|safe }};
+    console.log("Metric Data:", metricData);
+
+    if (metricData && metricData.length > 0) {
+      const labels = metricData.map(item => item.timestamp);
+      const cpu = metricData.map(item => item.cpu_usage);
+      const ram = metricData.map(item => item.ram_usage);
+      const disk = metricData.map(item => item.disk_usage);
+      const gpu = metricData.map(item => item.gpu_usage);
+
+      new Chart(document.getElementById("cpuChart"), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'CPU Usage (%)',
+              data: cpu,
+              borderColor: 'red',
+              backgroundColor: 'rgba(255, 0, 0, 0.1)',
+              tension: 0.4
+            },
+            {
+              label: 'RAM Usage (%)',
+              data: ram,
+              borderColor: 'blue',
+              backgroundColor: 'rgba(0, 0, 255, 0.1)',
+              tension: 0.4
+            },
+            {
+              label: 'Disk Usage (%)',
+              data: disk,
+              borderColor: 'green',
+              backgroundColor: 'rgba(0, 255, 0, 0.1)',
+              tension: 0.4
+            },
+            {
+              label: 'GPU Usage (%)',
+              data: gpu,
+              borderColor: 'orange',
+              backgroundColor: 'rgba(255, 165, 0, 0.1)',
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+    } else {
+      console.error("No metric data available");
+      document.getElementById("cpuChart").style.display = 'none';
+      document.body.innerHTML += '<p>No data available to display charts.</p>';
+    }
+  </script>
+</body>
+</html>
